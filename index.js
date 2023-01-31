@@ -213,8 +213,8 @@ const updateEmployee = () => {
     ])
     .then((input) => {
       const params = [
-        input.id,
         input.role_id,
+        input.id,
       ];
       const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
       db.query(sql, params, (err, res) => {
