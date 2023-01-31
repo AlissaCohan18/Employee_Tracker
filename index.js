@@ -2,9 +2,8 @@
 const inquirer = require("inquirer");
 const db = require("./db/connection");
 
-
 // Prompt user for input
-const promptQuestion = (input) => {
+const promptUser = (input) => {
   return inquirer
     .prompt([
       {
@@ -25,65 +24,107 @@ const promptQuestion = (input) => {
     .then((input) => {
       switch (input.Action) {
         case "view all departments":
-          console.log("view dept");
           viewAllDepartments();
           break;
         case "view all roles":
-          console.log("view role");
-          viewAllRoles()
+          viewAllRoles();
           break;
         case "view all employees":
-          console.log("view employees");
-          viewAllEmployees()
+          viewAllEmployees();
           break;
         case "add a department":
-          console.log("add depart");
-          addDepartment()
+          addDepartment();
           break;
         case "add a role":
-          console.log("add role");
-          addRole()
+          addRole();
           break;
         case "add an employee":
-          console.log("add empl");
-          addEmployee()
+          addEmployee();
           break;
         case "update an employee role":
-          console.log("update epml");
-          updateEmployee()
+          updateEmployee();
           break;
       }
       return input;
     });
 };
 
-promptQuestion();
+promptUser();
 
-// presented with a formatted table showing department names and department ids
-const viewAllDepartments= () => {
+// presented with formatted table showing department names and department ids
+const viewAllDepartments = () => {
   db.query(
-    "SELECT department.id, department.name FROM department;",
+    `SELECT department.id, department.name FROM department;`,
     function (err, res) {
       if (err) throw err;
       console.table(res);
+      promptUser();
     }
-    );
-  }
-  
-  // // presented with the job title, role id, the department that role belongs to, and the salary for that role
-  // const viewAllRoles
+  );
+};
 
-  // // presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
-  // const viewAllEmployees
+//presented with job title, role id, department that role belongs to, and salary for that role
+const viewAllRoles = () => {
+  db.query(
+    `SELECT roles.title, roles.id AS role_id, roles.salary, department.name AS department_name
+    FROM roles LEFT JOIN department
+    ON roles.department_id = department.id;`,
+    function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      promptUser();
+    }
+  );
+};
 
-  // // prompted to enter the name of the department and that department is added to the database
-  // const  addDepartment
+// presented with employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+const viewAllEmployees = () => {
+  db.query(
+    `SELECT employee.id AS employee_id, employee.first_name, employee.last_name, roles.title, department.name AS department, roles.salary, 
+    CONCAT(manager.first_name, ' ', manager.last_name) AS manager 
+    FROM employee employee 
+    LEFT JOIN roles roles 
+    ON employee.role_id = roles.id 
+    LEFT JOIN department department 
+    ON department.id = roles.department_id 
+    LEFT JOIN employee manager 
+    ON manager.id = employee.manager_id`,
+    function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      promptUser();
+    }
+  );
+};
 
-  // // prompted to enter the name, salary, and department for the role and that role is added to the database
-  // const  addRole
+//prompted to enter the name of the department and that department is added to the database
+const  addDepartment= () => {
+  return inquirer
+    .prompt([
+      {
+        type: "input",
+        name: "name",
+        message: "What department would you like to add?",
+      },
+    ])
+    .then((input) => {
+      const params = input.name
+      const sql = `INSERT INTO department (name) VALUES (?)`;
+      db.query(sql, params, (err, res) => {
+          if (err) throw err;
+          return input;
+    });
+  })
+  .then(() => {
+    promptUser()
+  })
+};
 
-  // // prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
-  // const  addEmployee
+// // prompted to enter the name, salary, and department for the role and that role is added to the database
+// const  addRole
 
-  // // prompted to select an employee to update and their new role and this information is updated in the database
-  // const  updateEmployee
+// // prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
+// const  addEmployee
+
+// // prompted to select an employee to update and their new role and this information is updated in the database
+// const  updateEmployee
